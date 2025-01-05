@@ -46,7 +46,7 @@ public class SecurityConfig
             		
             	// Permitimos que todas las solicitudes a las rutas "/public/**" sean accesibles sin autenticación
             		
-                .requestMatchers("/public/**", "/firebase/auth/user", "/firebase/token/user", "/firebase/token/app").permitAll()
+                .requestMatchers("/public/**", "/firebase/token/user", "/firebase/token/app").permitAll()
                 
                 // Para cualquier otra ruta que no sean las anteriores, requerimos autenticación
                 
