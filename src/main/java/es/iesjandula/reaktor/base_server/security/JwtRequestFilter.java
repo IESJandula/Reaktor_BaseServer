@@ -86,10 +86,10 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
 	        {
 	            // Eliminamos el prefijo "Bearer " del encabezado 
-	            String token = authorizationHeader.substring(7);
+	            String jwt = authorizationHeader.substring(7);
 	            
 	            // Parseamos y verificamos el token, obteniendo los claims
-	            Claims claims = this.jwtParser.parseSignedClaims(token).getPayload();
+	            Claims claims = this.jwtParser.parseSignedClaims(jwt).getPayload();
 	            
 	            // Creamos el objeto de autenticación
 	            UsernamePasswordAuthenticationToken authentication = null ;
@@ -98,7 +98,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            if (claims.containsKey(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL))
 	            {
 	            	// Extraer info de usuario del JWT
-	            	DtoUsuarioExtended usuario = this.obtenerUsuario(authorizationHeader, claims) ;
+	            	DtoUsuarioExtended usuario = this.obtenerUsuario(jwt, claims) ;
 	            	
 	            	// Creamos la lista de roles como GrantedAuthority para Spring Security
 	            	List<GrantedAuthority> authorities = usuario.getRoles()
@@ -136,11 +136,11 @@ public class JwtRequestFilter extends OncePerRequestFilter
     /**
      * Extrae y valida el JWT, devolviendo la info de usuario.
      *
-     * @param authorizationHeader con el JWT
+     * @param jwt con el JWT
      * @param claims con la información del usuario del JWT
      * @return DtoUsuario con datos del usuario
      */
-    public DtoUsuarioExtended obtenerUsuario(String authorizationHeader, Claims claims)
+    public DtoUsuarioExtended obtenerUsuario(String jwt, Claims claims)
     {
         // Extraemos datos de usuario
         String email     = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
@@ -157,7 +157,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
         dtoUsuarioExtended.setNombre(nombre);
         dtoUsuarioExtended.setApellidos(apellidos);
         dtoUsuarioExtended.setRoles(roles);
-        dtoUsuarioExtended.setJwt(authorizationHeader);
+        dtoUsuarioExtended.setJwt(jwt);
         
         return dtoUsuarioExtended;
     }
