@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import es.iesjandula.reaktor.base.security.models.DtoAplicacion;
-import es.iesjandula.reaktor.base.security.models.DtoUsuario;
+import es.iesjandula.reaktor.base.security.models.DtoUsuarioExtended;
 import es.iesjandula.reaktor.base.security.service.PublicKeyGetter;
 import es.iesjandula.reaktor.base.utils.BaseConstants;
 import es.iesjandula.reaktor.base.utils.BaseException;
@@ -98,7 +98,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            if (claims.containsKey(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL))
 	            {
 	            	// Extraer info de usuario del JWT
-	            	DtoUsuario usuario = this.obtenerUsuario(claims) ;
+	            	DtoUsuarioExtended usuario = this.obtenerUsuario(authorizationHeader, claims) ;
 	            	
 	            	// Creamos la lista de roles como GrantedAuthority para Spring Security
 	            	List<GrantedAuthority> authorities = usuario.getRoles()
@@ -135,11 +135,12 @@ public class JwtRequestFilter extends OncePerRequestFilter
 
     /**
      * Extrae y valida el JWT, devolviendo la info de usuario.
-     * 
+     *
+     * @param authorizationHeader con el JWT
      * @param claims con la información del usuario del JWT
      * @return DtoUsuario con datos del usuario
      */
-    public DtoUsuario obtenerUsuario(Claims claims)
+    public DtoUsuarioExtended obtenerUsuario(String authorizationHeader, Claims claims)
     {
         // Extraemos datos de usuario
         String email     = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
@@ -150,7 +151,15 @@ public class JwtRequestFilter extends OncePerRequestFilter
         List<String> roles = (List<String>) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_ROLES);
 
         // Devolvemos el usuario con roles
-        return new DtoUsuario(email, nombre, apellidos, roles);
+        DtoUsuarioExtended dtoUsuarioExtended = new DtoUsuarioExtended() ;
+        
+        dtoUsuarioExtended.setEmail(email);
+        dtoUsuarioExtended.setNombre(nombre);
+        dtoUsuarioExtended.setApellidos(apellidos);
+        dtoUsuarioExtended.setRoles(roles);
+        dtoUsuarioExtended.setJwt(authorizationHeader);
+        
+        return dtoUsuarioExtended;
     }
     
     /**
