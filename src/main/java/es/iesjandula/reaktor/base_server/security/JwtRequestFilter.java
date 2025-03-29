@@ -73,7 +73,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
         String requestURI = request.getRequestURI(); 
         
         // Rutas exentas de filtrado
-        if (requestURI.equals("/firebase/token/user") || requestURI.equals("/firebase/token/app"))
+        if (requestURI.equals("/firebase/token/user") || requestURI.equals("/firebase/token/app") || requestURI.contains("/proyectolince"))
         {
             chain.doFilter(request, response) ;
         }
