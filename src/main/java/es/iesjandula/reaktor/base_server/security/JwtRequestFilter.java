@@ -143,9 +143,11 @@ public class JwtRequestFilter extends OncePerRequestFilter
     public DtoUsuarioExtended obtenerUsuario(String jwt, Claims claims)
     {
         // Extraemos datos de usuario
-        String email     = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
-        String nombre    = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_NOMBRE);
-        String apellidos = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_APELLIDOS);
+        String email           = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
+        String nombre          = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_NOMBRE);
+        String apellidos       = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_APELLIDOS);
+        String departamento    = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_DEPARTAMENTO);
+        String fechaNacimiento = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_FECHA_NACIMIENTO);
 
         @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_ROLES);
@@ -156,6 +158,8 @@ public class JwtRequestFilter extends OncePerRequestFilter
         dtoUsuarioExtended.setEmail(email);
         dtoUsuarioExtended.setNombre(nombre);
         dtoUsuarioExtended.setApellidos(apellidos);
+        dtoUsuarioExtended.setDepartamento(departamento);
+        dtoUsuarioExtended.setFechaNacimiento(fechaNacimiento);
         dtoUsuarioExtended.setRoles(roles);
         dtoUsuarioExtended.setJwt(jwt);
         
@@ -174,9 +178,9 @@ public class JwtRequestFilter extends OncePerRequestFilter
         String nombre    = (String) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_NOMBRE) ;
 
         @SuppressWarnings("unchecked")
-        List<String> roles = (List<String>) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_ROLES) ;
+        List<String> roles = (List<String>) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_ROLES) ;
 
-        // Devolvemos el usuario con roles
+        // Devolvemos la aplicación con roles
         return new DtoAplicacion(nombre, roles) ;
     }
 }
