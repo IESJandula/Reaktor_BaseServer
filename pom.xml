@@ -1,26 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>es.iesjandula.reaktor</groupId>
-		<artifactId>Dependencies</artifactId>
-		<version>1.0.0</version>
-		<relativePath /> <!-- lookup parent from repository -->
-	</parent>
+    <parent>
+        <groupId>es.iesjandula.reaktor</groupId>
+        <artifactId>Dependencies</artifactId>
+        <version>1.0.0</version>
+        <relativePath /> <!-- lookup parent from repository -->
+    </parent>
 
-	<artifactId>BaseServer</artifactId>
+    <artifactId>BaseServer</artifactId>
 
-	<name>BaseServer</name>
-	<description>Utilidades Base de los servidores Spring Boot</description>
+    <name>BaseServer</name>
+    <description>Utilidades Base de los servidores Spring Boot</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>es.iesjandula.reaktor</groupId>
-			<artifactId>Base</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>es.iesjandula.reaktor</groupId>
+            <artifactId>Base</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.2.0</version>
+        </dependency>
+    </dependencies>
 </project>
