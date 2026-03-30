@@ -45,12 +45,17 @@ public class AuditoriaRabbitMQ
 		{
 			// En caso de error, logueamos el error en warning
 			log.warn("El siguiente evento de auditoría no se ha publicado:" + 
-			         	" service="    + dtoAuditoria.getServiceName() + 
-						" metodo="     + dtoAuditoria.getMetodo() + 
-						" endpoint="   + dtoAuditoria.getEndpoint() + 
-						" status="     + dtoAuditoria.getStatus() + 
-						" durationMs=" + dtoAuditoria.getDurationMs(),
-			            " exchange="   +  this.exchange + " routingKey=" + this.routingKey, 
+			         	" service="    					+ dtoAuditoria.getServiceName() + 
+						" tipoEventoUsuarioAplicacion=" + dtoAuditoria.getTipoEventoUsuarioAplicacion() + 
+						" emailUsuario="                + dtoAuditoria.getEmailUsuario() + 
+						" nombreUsuario="               + dtoAuditoria.getNombreUsuario() + 
+						" apellidosUsuario=" 			+ dtoAuditoria.getApellidosUsuario() + 
+						" roles="            			+ dtoAuditoria.getRoles() + 
+						" metodo="           			+ dtoAuditoria.getMetodo() + 
+						" endpoint="         			+ dtoAuditoria.getEndpoint() + 
+						" status="           			+ dtoAuditoria.getStatus() + 
+						" durationMs="       			+ dtoAuditoria.getDurationMs(),
+			            " exchange=" +  this.exchange + " routingKey=" + this.routingKey, 
 					exception) ;
 		}
 	}

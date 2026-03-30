@@ -93,11 +93,8 @@ public class JwtRequestFilter extends OncePerRequestFilter
         }
         else
         {
-            // Definimos el tipo de evento (USUARIO o APPLICATION)
-            String tipoEventoUsuarioAplicacion = null;
-
-            // Definimos la lista de roles
-            List<String> roles = null ;
+            // Creamos el objeto de auditoría
+            DtoAuditoria dtoAuditoria = new DtoAuditoria();
 
 	        // Obtenemos el valor de la cabecera "Authorization"
 	        final String authorizationHeader = request.getHeader("Authorization") ;
@@ -129,11 +126,8 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            	// Creamos el objeto de autenticación
 	            	authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities) ;
 
-                    // Seteamos el tipo de evento (USUARIO)
-                    tipoEventoUsuarioAplicacion = BaseConstants.STRING_TIPO_EVENTO_USUARIO;
-
-                    // Seteamos la lista de roles
-                    roles = usuario.getRoles();
+                    // Agregamos la información del usuario al objeto de auditoría
+                    dtoAuditoria = this.crearAuditoriaUsuario(usuario);
 	            }
 	            else
 	            {
@@ -149,11 +143,8 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            	// Creamos el objeto de autenticación
 	            	authentication = new UsernamePasswordAuthenticationToken(aplicacion, null, authorities) ;	            	
 
-                    // Seteamos el tipo de evento (APPLICATION)
-                    tipoEventoUsuarioAplicacion = BaseConstants.STRING_TIPO_EVENTO_APLICACION;
-
-                    // Seteamos la lista de roles
-                    roles = aplicacion.getRoles();
+                    // Creamos el objeto de auditoría para la aplicación
+                    dtoAuditoria = this.crearAuditoriaAplicacion(aplicacion);
 	            }
 	        	
 	            // Lo establecemos en el contexto de seguridad de Spring
@@ -172,8 +163,8 @@ public class JwtRequestFilter extends OncePerRequestFilter
                 // Convertimos el tiempo de ejecución a milisegundos
                 long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
 
-                // Construimos el evento de auditoría
-                DtoAuditoria dtoAuditoria = this.construirEventoAuditoria(request, durationMs, response.getStatus(), tipoEventoUsuarioAplicacion, roles);
+                // Agregamos la información común del evento de auditoría
+                this.agregarInformacionComunAuditoria(request, durationMs, response.getStatus(), dtoAuditoria);
 
                 // Publicamos el evento de auditoría
                 this.auditoriaRabbitMQ.publicarEvento(dtoAuditoria);
@@ -233,28 +224,70 @@ public class JwtRequestFilter extends OncePerRequestFilter
     }
 
     /**
+     * Agrega la información del usuario al objeto de auditoría.
+     *
+     * @param usuario con el usuario
+     */
+    private DtoAuditoria crearAuditoriaUsuario(DtoUsuarioExtended usuario)
+    {
+        // Creamos el objeto de auditoría
+        DtoAuditoria dtoAuditoria = new DtoAuditoria();
+
+        // Seteamos el tipo de evento (USUARIO)
+        dtoAuditoria.setTipoEventoUsuarioAplicacion(BaseConstants.STRING_TIPO_EVENTO_USUARIO);
+
+        // Seteamos el email del usuario
+        dtoAuditoria.setEmailUsuario(usuario.getEmail());
+
+        // Seteamos el nombre del usuario
+        dtoAuditoria.setNombreUsuario(usuario.getNombre());
+
+        // Seteamos los apellidos del usuario
+        dtoAuditoria.setApellidosUsuario(usuario.getApellidos());
+
+        // Seteamos la lista de roles
+        dtoAuditoria.setRoles(usuario.getRoles());
+
+        // Devolvemos el objeto de auditoría
+        return dtoAuditoria;
+    }
+
+    /**
+     * Crea el objeto de auditoría para la aplicación.
+     *
+     * @param aplicacion con la aplicación
+     */
+    private DtoAuditoria crearAuditoriaAplicacion(DtoAplicacion aplicacion)
+    {
+        // Creamos el objeto de auditoría
+        DtoAuditoria dtoAuditoria = new DtoAuditoria();
+
+        // Seteamos el tipo de evento (APLICACION)
+        dtoAuditoria.setTipoEventoUsuarioAplicacion(BaseConstants.STRING_TIPO_EVENTO_APLICACION);
+
+        // Seteamos el nombre de la aplicación
+        dtoAuditoria.setNombreAplicacion(aplicacion.getNombre());
+
+        // Seteamos la lista de roles
+        dtoAuditoria.setRoles(aplicacion.getRoles());
+
+        // Devolvemos el objeto de auditoría
+        return dtoAuditoria;
+    }
+
+    /**
      * Construye el evento de auditoría para el HTTP request.
      *
      * @param request con la petición HTTP
      * @param durationMs con el tiempo de ejecución en milisegundos
      * @param httpStatus con el estado HTTP
-     * @param tipoEventoUsuarioAplicacion con el tipo de evento (USUARIO o APLICACION)
-     * @param roles con la lista de roles
-     * @return AuditHttpEventDto con el evento de auditoría
+     * @param dtoAuditoria con el objeto de auditoría
      */
-	private DtoAuditoria construirEventoAuditoria(HttpServletRequest request, long durationMs, int httpStatus, String tipoEventoUsuarioAplicacion, List<String> roles)
+	private void agregarInformacionComunAuditoria(HttpServletRequest request, long durationMs, int httpStatus, DtoAuditoria dtoAuditoria)
 	{
-        DtoAuditoria dtoAuditoria = new DtoAuditoria();
-        
         // Seteamos el nombre del servicio
 		dtoAuditoria.setServiceName(this.serviceName);
 		
-        // Seteamos el tipo de evento (USUARIO o APLICACION)
-        dtoAuditoria.setTipoEventoUsuarioAplicacion(tipoEventoUsuarioAplicacion);
-
-        // Seteamos la lista de roles
-        dtoAuditoria.setRoles(roles);
-
         // Seteamos el método HTTP
 		dtoAuditoria.setMetodo(request.getMethod());
 
@@ -272,8 +305,5 @@ public class JwtRequestFilter extends OncePerRequestFilter
 
         // Seteamos la duración del evento en milisegundos
 		dtoAuditoria.setDurationMs(durationMs);
-
-        // Devolvemos el evento de auditoría
-		return dtoAuditoria ;
 	}
 }
