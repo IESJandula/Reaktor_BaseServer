@@ -1,10 +1,15 @@
 package es.iesjandula.reaktor.base_server.security;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,11 +17,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import es.iesjandula.reaktor.base.security.models.DtoAuditoria;
 import es.iesjandula.reaktor.base.security.models.DtoAplicacion;
 import es.iesjandula.reaktor.base.security.models.DtoUsuarioExtended;
 import es.iesjandula.reaktor.base.security.service.PublicKeyGetter;
 import es.iesjandula.reaktor.base.utils.BaseConstants;
 import es.iesjandula.reaktor.base.utils.BaseException;
+import es.iesjandula.reaktor.base_server.utils.BaseServerConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -36,6 +43,12 @@ public class JwtRequestFilter extends OncePerRequestFilter
 
     @Autowired
     private PublicKeyGetter publicKeyGetter;
+
+    @Autowired
+    private AuditoriaRabbitMQ auditoriaRabbitMQ;
+
+    @Value("${" + BaseServerConstants.STRING_SPRING_APPLICATION_NAME + "}")
+    private String serviceName;
 
     /**
      * En lugar de usar @PostConstruct, usamos initFilterBean() 
@@ -66,6 +79,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
      * Filtra las solicitudes para verificar el JWT, excepto para ciertas rutas.
      */
     @Override
+    @SuppressWarnings("null")
     protected void doFilterInternal(HttpServletRequest request, 
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException
@@ -79,6 +93,12 @@ public class JwtRequestFilter extends OncePerRequestFilter
         }
         else
         {
+            // Definimos el tipo de evento (USUARIO o APPLICATION)
+            String tipoEventoUsuarioAplicacion = null;
+
+            // Definimos la lista de roles
+            List<String> roles = null ;
+
 	        // Obtenemos el valor de la cabecera "Authorization"
 	        final String authorizationHeader = request.getHeader("Authorization") ;
 	        
@@ -108,6 +128,12 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            	
 	            	// Creamos el objeto de autenticación
 	            	authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities) ;
+
+                    // Seteamos el tipo de evento (USUARIO)
+                    tipoEventoUsuarioAplicacion = BaseConstants.STRING_TIPO_EVENTO_USUARIO;
+
+                    // Seteamos la lista de roles
+                    roles = usuario.getRoles();
 	            }
 	            else
 	            {
@@ -122,14 +148,36 @@ public class JwtRequestFilter extends OncePerRequestFilter
 	            	
 	            	// Creamos el objeto de autenticación
 	            	authentication = new UsernamePasswordAuthenticationToken(aplicacion, null, authorities) ;	            	
+
+                    // Seteamos el tipo de evento (APPLICATION)
+                    tipoEventoUsuarioAplicacion = BaseConstants.STRING_TIPO_EVENTO_APLICACION;
+
+                    // Seteamos la lista de roles
+                    roles = aplicacion.getRoles();
 	            }
 	        	
 	            // Lo establecemos en el contexto de seguridad de Spring
 	            SecurityContextHolder.getContext().setAuthentication(authentication) ;
 	        }
 	
-	        // Continuamos con el resto de la cadena de filtros
-	        chain.doFilter(request, response) ;
+            // Medimos el tiempo de ejecución del filtro
+            long startNanos = System.nanoTime();
+            try
+            {
+                // Continuamos con el resto de la cadena de filtros
+                chain.doFilter(request, response) ;
+            }
+            finally
+            {
+                // Convertimos el tiempo de ejecución a milisegundos
+                long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
+
+                // Construimos el evento de auditoría
+                DtoAuditoria dtoAuditoria = this.construirEventoAuditoria(request, durationMs, response.getStatus(), tipoEventoUsuarioAplicacion, roles);
+
+                // Publicamos el evento de auditoría
+                this.auditoriaRabbitMQ.publicarEvento(dtoAuditoria);
+            }
         }
     }
 
@@ -140,7 +188,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
      * @param claims con la información del usuario del JWT
      * @return DtoUsuario con datos del usuario
      */
-    public DtoUsuarioExtended obtenerUsuario(String jwt, Claims claims)
+    private DtoUsuarioExtended obtenerUsuario(String jwt, Claims claims)
     {
         // Extraemos datos de usuario
         String email           = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
@@ -172,7 +220,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
      * @param claims con la información del usuario del JWT
      * @return DtoUsuario con datos del usuario
      */
-    public DtoAplicacion obtenerAplicacion(Claims claims)
+    private DtoAplicacion obtenerAplicacion(Claims claims)
     {
         // Extraemos datos de aplicación
         String nombre    = (String) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_NOMBRE) ;
@@ -183,4 +231,49 @@ public class JwtRequestFilter extends OncePerRequestFilter
         // Devolvemos la aplicación con roles
         return new DtoAplicacion(nombre, roles) ;
     }
+
+    /**
+     * Construye el evento de auditoría para el HTTP request.
+     *
+     * @param request con la petición HTTP
+     * @param durationMs con el tiempo de ejecución en milisegundos
+     * @param httpStatus con el estado HTTP
+     * @param tipoEventoUsuarioAplicacion con el tipo de evento (USUARIO o APLICACION)
+     * @param roles con la lista de roles
+     * @return AuditHttpEventDto con el evento de auditoría
+     */
+	private DtoAuditoria construirEventoAuditoria(HttpServletRequest request, long durationMs, int httpStatus, String tipoEventoUsuarioAplicacion, List<String> roles)
+	{
+        DtoAuditoria dtoAuditoria = new DtoAuditoria();
+        
+        // Seteamos el nombre del servicio
+		dtoAuditoria.setServiceName(this.serviceName);
+		
+        // Seteamos el tipo de evento (USUARIO o APLICACION)
+        dtoAuditoria.setTipoEventoUsuarioAplicacion(tipoEventoUsuarioAplicacion);
+
+        // Seteamos la lista de roles
+        dtoAuditoria.setRoles(roles);
+
+        // Seteamos el método HTTP
+		dtoAuditoria.setMetodo(request.getMethod());
+
+        // Seteamos el endpoint
+		dtoAuditoria.setEndpoint(request.getRequestURI());
+
+        // Seteamos el user agent
+		dtoAuditoria.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
+        
+        // Seteamos el timestamp
+        dtoAuditoria.setTimestamp(LocalDateTime.now());
+
+        // Seteamos el estado HTTP
+		dtoAuditoria.setStatus(httpStatus);
+
+        // Seteamos la duración del evento en milisegundos
+		dtoAuditoria.setDurationMs(durationMs);
+
+        // Devolvemos el evento de auditoría
+		return dtoAuditoria ;
+	}
 }
