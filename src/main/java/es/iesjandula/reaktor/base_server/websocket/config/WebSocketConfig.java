@@ -30,7 +30,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 	{
 
 		// Canal donde el backend envía mensajes al frontend
-		config.enableSimpleBroker("/topic");
+		config.enableSimpleBroker("/topic", "/queue");
+		config.setUserDestinationPrefix("/user");
 
 		// Prefijo para mensajes enviados desde el cliente
 		config.setApplicationDestinationPrefixes("/app");
