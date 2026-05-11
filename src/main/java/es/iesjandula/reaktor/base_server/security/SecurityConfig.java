@@ -1,6 +1,7 @@
 package es.iesjandula.reaktor.base_server.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,9 @@ public class SecurityConfig
 {
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter ;
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 	
 	/**
 	 * Este método genera un bean gestionado por el contenedor de Spring
@@ -47,7 +51,7 @@ public class SecurityConfig
             		
             	// Permitimos que todas las solicitudes a las rutas públicas sean accesibles sin autenticación
             		
-                .requestMatchers("/public/**", "/notifications/gmail/oauth2callback", "/firebase/token/user", "/firebase/token/app", "/proyectolince/**", "/ws/**").permitAll()
+                .requestMatchers("/public/**", "/notifications/gmail/oauth2callback", "/firebase/token/user", "/firebase/token/app", "/proyectolince/**", "/" + applicationName + "/ws/**").permitAll()
                 
                 // Para cualquier otra ruta que no sean las anteriores, requerimos autenticación
                 
