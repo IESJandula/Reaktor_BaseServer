@@ -47,7 +47,7 @@ public class SecurityConfig
             		
             	// Permitimos que todas las solicitudes a las rutas públicas sean accesibles sin autenticación
             		
-                .requestMatchers("/public/**", "/notifications/gmail/oauth2callback", "/firebase/token/user", "/firebase/token/app", "/proyectolince/**").permitAll()
+                .requestMatchers("/public/**", "/notifications/gmail/oauth2callback", "/firebase/token/user", "/firebase/token/app", "/proyectolince/**", "/ws/**").permitAll()
                 
                 // Para cualquier otra ruta que no sean las anteriores, requerimos autenticación
                 
