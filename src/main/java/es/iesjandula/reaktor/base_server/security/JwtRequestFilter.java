@@ -1,7 +1,6 @@
 package es.iesjandula.reaktor.base_server.security;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -183,6 +182,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
     {
         // Extraemos datos de usuario
         String email           = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_EMAIL);
+        String cursoAcademico  = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_CURSO_ACADEMICO);
         String nombre          = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_NOMBRE);
         String apellidos       = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_APELLIDOS);
         String departamento    = (String) claims.get(BaseConstants.JWT_ATTR_USUARIOS_ATTRIBUTE_DEPARTAMENTO);
@@ -195,6 +195,7 @@ public class JwtRequestFilter extends OncePerRequestFilter
         DtoUsuarioExtended dtoUsuarioExtended = new DtoUsuarioExtended() ;
         
         dtoUsuarioExtended.setEmail(email);
+        dtoUsuarioExtended.setCursoAcademico(cursoAcademico);
         dtoUsuarioExtended.setNombre(nombre);
         dtoUsuarioExtended.setApellidos(apellidos);
         dtoUsuarioExtended.setDepartamento(departamento);
@@ -214,13 +215,14 @@ public class JwtRequestFilter extends OncePerRequestFilter
     private DtoAplicacion obtenerAplicacion(Claims claims)
     {
         // Extraemos datos de aplicación
-        String nombre    = (String) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_NOMBRE) ;
+        String nombre         = (String) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_NOMBRE) ;
+        String cursoAcademico = (String) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_CURSO_ACADEMICO) ;
 
         @SuppressWarnings("unchecked")
-        List<String> roles = (List<String>) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_ROLES) ;
+        List<String> roles    = (List<String>) claims.get(BaseConstants.JWT_ATTR_APLICACIONES_ATTRIBUTE_ROLES) ;
 
         // Devolvemos la aplicación con roles
-        return new DtoAplicacion(nombre, roles) ;
+        return new DtoAplicacion(nombre, cursoAcademico, roles) ;
     }
 
     /**
