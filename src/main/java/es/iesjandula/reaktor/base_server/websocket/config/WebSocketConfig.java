@@ -30,6 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 	 * Configuración del broker de mensajes
 	 */
 	@Override
+	@SuppressWarnings("null")
 	public void configureMessageBroker(MessageBrokerRegistry config)
 	{
 
@@ -45,6 +46,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 	 * Endpoint de conexión WebSocket
 	 */
 	@Override
+	@SuppressWarnings("null")
 	public void registerStompEndpoints(StompEndpointRegistry registry)
 	{
 		// Construye el path dinámicamente: /printers/ws, /bookings/ws, etc.
@@ -58,6 +60,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 	 * Aquí se añade el interceptor de seguridad
 	 */
 	@Override
+	@SuppressWarnings("null")
 	public void configureClientInboundChannel(ChannelRegistration registration)
 	{
 		registration.interceptors(authChannelInterceptor);

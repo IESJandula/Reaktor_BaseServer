@@ -26,7 +26,6 @@ import jakarta.annotation.PostConstruct;
 @Component
 public class AuthChannelInterceptor implements ChannelInterceptor
 {
-
 	/** Parser JWT reutilizable */
 	private JwtParser jwtParser;
 
@@ -43,6 +42,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor
 	}
 
 	@Override
+	@SuppressWarnings("null")
 	public Message<?> preSend(Message<?> message, MessageChannel channel)
 	{
 
